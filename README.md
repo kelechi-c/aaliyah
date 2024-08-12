@@ -1,3 +1,3 @@
 ## aaliyah
 
-A collection (or garden of vision models) for medical/agricultural applications. Image classification/segmentation. The collection will be exapnded over time :)
+A collection (or garden of vision models) for agricultural and medical image classification. The collection will be exapnded over time :)
