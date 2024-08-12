@@ -1,38 +1,6 @@
-import torch
 from torch import nn
 from einops import rearrange
-from timm.layers import DropPath, trunc_normal_
-
-
-# patchify module
-class Patchify(nn.Module):
-    def __init__(self, patches=16):
-        super().__init__()
-        self.patch_size = patches
-        self.patch_module = nn.Unfold(kernel_size=patches, stride=patches)
-
-    def forward(self, x: torch.Tensor):
-        batch_s, ch, h, w = x.shape
-
-        x = self.patch_module(x)
-        x = x.view(batch_s, ch, self.patch_size, self.patch_size, -1)
-        x = x.permute(0, 4, 1, 2, 3)
-
-        return x
-
-
-class DepthwiseConvBlock(nn.Module):
-    def __init__(self):
-        self.depthconv = nn.Sequential(
-            nn.Conv2d(3, 32, kernel_size=3, groups=3, padding=1),
-            nn.Conv2d(32, 32, kernel_size=1, padding=0),
-            nn.GELU(),
-        )
-
-    def forward(self, x):
-        x = self.depthconv(x)
-
-        return x
+from timm.layers import trunc_normal_
 
 
 # convnext block
@@ -44,6 +12,7 @@ class ConvNextBlock(nn.Module):
             nn.Linear(dim, 4 * dim),  # pointwise convolution with MLp
             nn.GELU(),  # replace ReLU
             nn.Linear(4 * dim, dim),
+            nn.Dropout(0.1),
         )
 
     def forward(self, x):
