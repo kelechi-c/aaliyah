@@ -1,9 +1,7 @@
 """
-
 Implementation of the MobileNet convolutional architecture from the paper:
 MobileNets: Efficient Convolutional Neural Networks for Mobile Vision Applications
 by Google.
-
 """
 
 import torch

@@ -5,7 +5,7 @@ class config:
     lr = 1e-4
     epoch_count = 50
     image_size = 224
-    grad_acc_step = 5
+    grad_acc_step = 4
     batch_size = 32
     dtype = torch.float16
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
