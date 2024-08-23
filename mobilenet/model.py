@@ -17,12 +17,17 @@ login()
 
 
 class MobileBlock(nn.Module):
-    def __init__(self, in_channels, out_channels):
+    def __init__(self, in_channels, out_channels, stride=1):
         super().__init__()
 
         self.depthwise_conv = nn.Sequential(
             nn.Conv2d(
-                in_channels, in_channels, kernel_size=3, padding=1, groups=in_channels
+                in_channels,
+                in_channels,
+                kernel_size=3,
+                stride=stride,
+                padding=1,
+                groups=in_channels,
             ),
             nn.BatchNorm2d(in_channels),
             nn.ReLU(inplace=True),
@@ -57,7 +62,7 @@ class MobileNet(nn.Module, PytorchModelHubMixin):
         super().__init__()
         self.input_conv = nn.Sequential(
             nn.Conv2d(
-                in_channels=3, out_channels=32, kernel_size=3, stride=1, padding=1
+                in_channels=3, out_channels=32, kernel_size=3, stride=2, padding=1
             ),
             nn.BatchNorm2d(out_ch),
             nn.ReLU(inplace=True),
@@ -65,24 +70,26 @@ class MobileNet(nn.Module, PytorchModelHubMixin):
 
         self.mobilenet_layers = nn.Sequential(
             MobileBlock(32, 64),
-            MobileBlock(64, 128),
+            MobileBlock(64, 128, stride=2),
             MobileBlock(128, 256),
-            MobileBlock(256, 512),
+            MobileBlock(256, 512, stride=2),
             # 5x (512, 512) block
             MobileBlock(512, 512),
             MobileBlock(512, 512),
             MobileBlock(512, 512),
             MobileBlock(512, 512),
             MobileBlock(512, 512),
-            MobileBlock(512, 1024),
-            nn.AdaptiveAvgPool2d(1),
+            MobileBlock(512, 1024, stride=2),
+            MobileBlock(1024, 1024, stride=2),
+            nn.AdaptiveAvgPool2d((1, 1)),
         )
         self.linear_fc = nn.Linear(out_size, num_classes)
 
     def forward(self, x):
         x = self.input_conv(x)
-        x = x.view(-1, 1024)
+        x = self.mobilenet_layers(x)
 
+        x = x.view(-1, 1024)
         x = self.linear_fc(x)
 
         x = func_nn.softmax(x, dim=1)
