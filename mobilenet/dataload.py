@@ -1,9 +1,10 @@
 import torch
 from datasets import load_dataset
 from torch.utils.data import DataLoader, IterableDataset
-from convnext_model.utils import config, read_image
+from .utils_config import config
+from ..random_utils import read_image
 
-hfdataset = load_dataset(config.dataset_id, spit="train", streaming=True)
+hfdataset = load_dataset(config.leaf_dataset_id, spit="train", streaming=True)
 
 
 class Image_dataset(IterableDataset):
@@ -13,7 +14,7 @@ class Image_dataset(IterableDataset):
 
     def __iter__(self):
         for item in self.dataset:
-            image = read_image(item["image"])
+            image = read_image(item["image"], config.image_size)
             label = item["label"]
 
             image = torch.tensor(image, dtype=config.dtype)
@@ -22,5 +23,5 @@ class Image_dataset(IterableDataset):
             yield image, label
 
 
-dataset = Image_dataset()
+dataset = Image_dataset(hfdataset)
 train_loader = DataLoader(dataset, config.batch_size, shuffle=True)

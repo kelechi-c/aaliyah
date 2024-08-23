@@ -51,7 +51,7 @@ class MobileNet(nn.Module, PytorchModelHubMixin):
         self,
         out_ch=32,
         num_classes=15,
-        out_size=None,
+        out_size=1024,
         channels=[32, 64, 128, 256, 512, 1024],
     ):
         super().__init__()
@@ -68,6 +68,12 @@ class MobileNet(nn.Module, PytorchModelHubMixin):
             MobileBlock(64, 128),
             MobileBlock(128, 256),
             MobileBlock(256, 512),
+            # 5x (512, 512) block
+            MobileBlock(512, 512),
+            MobileBlock(512, 512),
+            MobileBlock(512, 512),
+            MobileBlock(512, 512),
+            MobileBlock(512, 512),
             MobileBlock(512, 1024),
             nn.AdaptiveAvgPool2d(1),
         )
@@ -75,6 +81,7 @@ class MobileNet(nn.Module, PytorchModelHubMixin):
 
     def forward(self, x):
         x = self.input_conv(x)
+        x = x.view(-1, 1024)
 
         x = self.linear_fc(x)
 
@@ -85,6 +92,6 @@ class MobileNet(nn.Module, PytorchModelHubMixin):
 
 mobilenet = MobileNet().to(config.dtype).to(config.device)
 
-mobilenet.save_pretrained(config.model_id)
+mobilenet.save_pretrained(config.har_model_id)
 # push to the hub
-mobilenet.push_to_hub(config.model_id)
+mobilenet.push_to_hub(config.har_model_id)
