@@ -35,6 +35,9 @@ def training_loop(
 ):
     model.train()
     train_loss = 0.0
+    correct = 0
+    total = 0
+    accuracy = 0.0
 
     for epoch in tqdm(range(epochs + 1)):
         optimizer.zero_grad()
@@ -51,10 +54,16 @@ def training_loop(
             gc.collect()
 
             # Mixed precision training
-            with torch.autocast(device_type=config.dtype, dtype=config.dtype):
+            with torch.autocast(device_type="cuda", dtype=config.dtype):
                 output = model(image)
                 train_loss = criterion(output, label.long())
                 train_loss = train_loss / config.grad_acc_step  # Normalize the loss
+
+            # Calculate accuracy
+            _, predicted = torch.max(output.data, 1)
+            total += label.size(0)
+            correct += (predicted == label).sum().item()
+            accuracy = 100 * correct / total
 
             # Scales loss. Calls backward() on scaled loss to create scaled gradients.
             scaler.scale(train_loss).backward()
@@ -66,15 +75,19 @@ def training_loop(
                 # Updates the scale for next iteration
                 scaler.update()
                 optimizer.zero_grad()
-            if (x + 1) % 5 == 0:
-                wandb.log({"loss": train_loss})
 
-        print(f"Epoch {epoch} of {epochs}, train_loss: {train_loss.item():.4f}")
+            if (x + 1) % 5 == 0:
+                wandb.log({"loss": train_loss, "accuracy": accuracy})
+
+        print(
+            f"Epoch {epoch} of {epochs}, train_loss: {train_loss.item():.4f}, accuracy: {accuracy:.4f}"
+        )
 
         print(f"Epoch @ {epoch} complete!")
 
     print(
-        f"End metrics for run of {epochs}, train_loss: {train_loss.item():.4f}")
+        f"End metrics for run of {epochs}, train_loss: {train_loss.item():.4f}, accuracy: {accuracy:.4f}"
+    )
 
     save_model(model, config.safetensor_file)
 

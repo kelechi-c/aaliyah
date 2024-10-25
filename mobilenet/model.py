@@ -60,8 +60,7 @@ class MobileNet(nn.Module, PytorchModelHubMixin):
         super().__init__()
         self.input_conv = nn.Sequential(
             nn.Conv2d(
-                in_channels=3, out_channels=32, kernel_size=3, stride=2, padding=1
-            ),
+                in_channels=3, out_channels=32, kernel_size=3, stride=2, padding=1),
             nn.BatchNorm2d(out_ch),
             nn.ReLU(inplace=True),
         )
